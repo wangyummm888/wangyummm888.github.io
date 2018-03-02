@@ -9,13 +9,13 @@
   <title>线程池 execute() 的工作逻辑 | 苦宇的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="最近在看《Java并发编程的艺术》回顾线程池的原理和参数的时候发现一个问题，如果 corePoolSize = 0 且 阻塞队列是无界的。线程池将如何工作？ 我们先回顾一下书里面描述线程池execute()工作的逻辑：  如果当前运行的线程，少于corePoolSize，则创建一个新的线程来执行任务。 如果运行的线程等于或多于 corePoolSize，将任务加入 BlockingQueue。 如">
-<meta name="keywords" content="后端,java,python,javascript,html5,开发者,程序猿,程序媛,极客,编程,代码,开源,IT网站,Developer,Programmer,Coder,Geek,html,css,css3,用户体验">
+<meta name="keywords" content="多线程,java,线程池">
 <meta property="og:type" content="article">
 <meta property="og:title" content="线程池 execute() 的工作逻辑">
 <meta property="og:url" content="cryyu.com/2017/03/02/thread-corepoolsize/index.html">
 <meta property="og:site_name" content="苦宇的博客">
 <meta property="og:description" content="最近在看《Java并发编程的艺术》回顾线程池的原理和参数的时候发现一个问题，如果 corePoolSize = 0 且 阻塞队列是无界的。线程池将如何工作？ 我们先回顾一下书里面描述线程池execute()工作的逻辑：  如果当前运行的线程，少于corePoolSize，则创建一个新的线程来执行任务。 如果运行的线程等于或多于 corePoolSize，将任务加入 BlockingQueue。 如">
-<meta property="og:updated_time" content="2018-03-02T04:34:06.248Z">
+<meta property="og:updated_time" content="2018-03-02T04:50:06.880Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程池 execute() 的工作逻辑">
 <meta name="twitter:description" content="最近在看《Java并发编程的艺术》回顾线程池的原理和参数的时候发现一个问题，如果 corePoolSize = 0 且 阻塞队列是无界的。线程池将如何工作？ 我们先回顾一下书里面描述线程池execute()工作的逻辑：  如果当前运行的线程，少于corePoolSize，则创建一个新的线程来执行任务。 如果运行的线程等于或多于 corePoolSize，将任务加入 BlockingQueue。 如">
@@ -258,6 +258,25 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">多线程</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">线程池</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
@@ -438,6 +457,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">多线程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>
