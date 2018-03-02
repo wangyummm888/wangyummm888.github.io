@@ -6,13 +6,13 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="cryyu.com">
-  <title>苦宇的博客</title>
+  <title>Archives: 2018/3 | 苦宇的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="河北大学09级网络工程，就职于神州优车。后端开发">
 <meta name="keywords" content="后端,java,python,javascript,html5,开发者,程序猿,程序媛,极客,编程,代码,开源,IT网站,Developer,Programmer,Coder,Geek,html,css,css3,用户体验">
 <meta property="og:type" content="website">
 <meta property="og:title" content="苦宇的博客">
-<meta property="og:url" content="cryyu.com/index.html">
+<meta property="og:url" content="cryyu.com/archives/2018/03/index.html">
 <meta property="og:site_name" content="苦宇的博客">
 <meta property="og:description" content="河北大学09级网络工程，就职于神州优车。后端开发">
 <meta name="twitter:card" content="summary">
@@ -151,199 +151,47 @@
           <div id="js-content" class="content-ll">
             
   
-    <article id="post-线程池-execute-的工作逻辑" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
+  
     
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/02/线程池-execute-的工作逻辑/">线程池 execute() 的工作逻辑</a>
-    </h1>
-  
-
-        
-        <a href="/2018/03/02/线程池-execute-的工作逻辑/" class="archive-article-date">
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2018" class="archive-year">2018</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2018/03/02/线程池-execute-的工作逻辑/" class="archive-article-date">
   	<time datetime="2018-03-02T03:14:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-03-02</time>
 </a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="线程池-execute-的工作逻辑"><a href="#线程池-execute-的工作逻辑" class="headerlink" title="线程池 execute()的工作逻辑"></a>线程池 execute()的工作逻辑</h1><p>最近在看<a href="https://re.jd.com/cps/item/11740734.html?cu=true&amp;utm_source=xilidou.com&amp;utm_medium=tuiguang&amp;utm_campaign=t_1000548061_&amp;utm_term=b152783143e94842bdc0e3422f300dce&amp;abt=3" target="_blank" rel="noopener">《Java并发编程的艺术》</a>回顾线程池的原理和参数的时候发现一个问题，如果 corePoolSize = 0 且 阻塞队列是无界的。线程池将如何工作？</p>
-<p>我们先回顾一下书里面描述线程池execute()工作的逻辑：</p>
-<ol>
-<li>如果当前运行的线程，少于corePoolSize，则创建一个新的线程来执行任务。</li>
-<li>如果运行的线程等于或多于 corePoolSize，将任务加入 BlockingQueue。</li>
-<li>如果 BlockingQueue 内的任务超过上限，则创建新的线程来处理任务。</li>
-<li>如果创建的线程数是单钱运行的线程超出maximumPoolSize，任务将被拒绝策略拒绝。</li>
-</ol>
-<p>看了这四个步骤，其实描述上是有一个漏洞的。如果核心线程数是0，阻塞队列也是无界的，会怎样？如果按照上文的逻辑，应该没有线程会被运行，然后线程无限的增加到队列里面。然后呢？</p>
-<p>于是我做了一下试验看看到底会怎样？</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">threadTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> ThreadPoolExecutor executor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>, TimeUnit.MILLISECONDS,<span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        AtomicInteger atomicInteger = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            executor.execute(() -&gt; &#123;</span><br><span class="line">                System.out.println(atomicInteger.getAndAdd(<span class="number">1</span>));</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>结果里面的<code>System.out.println(atomicInteger.getAndAdd(1));</code>语句执行了，与上面的描述矛盾了。到底发生了什么？线程池创建线程的逻辑是什么？我们还是从源码来看看到底线程池的逻辑是什么？</p>
-<h2 id="ctl"><a href="#ctl" class="headerlink" title="ctl"></a>ctl</h2><p>要了解线程池，我们首先要了解的线程池里面的状态控制的参数 ctl。</p>
-<ul>
-<li>线程池的ctl是一个原子的 AtomicInteger。</li>
-<li><p>这个ctl包含两个参数 ：</p>
-<ul>
-<li>workerCount 激活的线程数</li>
-<li>runState 当前线程池的状态</li>
-</ul>
-</li>
-<li><p>它的低29位用于存放当前的线程数, 因此一个线程池在理论上最大的线程数是 536870911; 高 3 位是用于表示当前线程池的状态, 其中高三位的值和状态对应如下:</p>
-<ul>
-<li>111: RUNNING</li>
-<li>000: SHUTDOWN</li>
-<li>001: STOP</li>
-<li>010: TIDYING</li>
-<li>110: TERMINATED</li>
-</ul>
-</li>
-</ul>
-<p>为了能够使用 ctl 线程池提供了三个方法:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Packing and unpacking ctl</span></span><br><span class="line"><span class="comment">// 获取线程池的状态</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</span><br><span class="line"><span class="comment">// 获取线程池的工作线程数</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</span><br><span class="line"><span class="comment">// 根据工作线程数和线程池状态获取 ctl</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="execute"><a href="#execute" class="headerlink" title="execute"></a>execute</h2><p>外界通过 <strong>execute</strong> 这个方法来向线程池提交任务。</p>
-<p>先看代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (command == <span class="keyword">null</span>)</span><br><span class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">       <span class="keyword">int</span> c = ctl.get();</span><br><span class="line">       <span class="comment">//如果工作线程数小于核心线程数，</span></span><br><span class="line">       <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</span><br><span class="line">           <span class="comment">//执行addWork，提交为核心线程,提交成功return。提交失败重新获取ctl</span></span><br><span class="line">           <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</span><br><span class="line">               <span class="keyword">return</span>;</span><br><span class="line">           c = ctl.get();</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">//如果工作线程数大于核心线程数，则检查线程池状态是否是正在运行，且将新线程向阻塞队列提交。</span></span><br><span class="line">       <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</span><br><span class="line">           <span class="comment">//recheck 需要再次检查,主要目的是判断加入到阻塞队里中的线程是否可以被执行</span></span><br><span class="line">           <span class="keyword">int</span> recheck = ctl.get();</span><br><span class="line">           <span class="comment">//如果线程池状态不为running，将任务从阻塞队列里面移除，启用拒绝策略</span></span><br><span class="line">           <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</span><br><span class="line">               reject(command);</span><br><span class="line">           <span class="comment">// 如果线程池的工作线程为零，则调用addWoker提交任务</span></span><br><span class="line">           <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</span><br><span class="line">               addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">//添加非核心线程失败，拒绝</span></span><br><span class="line">       <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</span><br><span class="line">           reject(command);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="addWorker"><a href="#addWorker" class="headerlink" title="addWorker"></a>addWorker</h2>   <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">addWorker</span><span class="params">(Runnable firstTask, <span class="keyword">boolean</span> core)</span> </span>&#123;</span><br><span class="line">    retry:</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> c = ctl.get();</span><br><span class="line">        <span class="comment">//获取线程池状态</span></span><br><span class="line">        <span class="keyword">int</span> rs = runStateOf(c);</span><br><span class="line">        <span class="comment">// Check if queue empty only if necessary.</span></span><br><span class="line">        <span class="comment">// 判断是否可以添加任务。</span></span><br><span class="line">        <span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp;</span><br><span class="line">            ! (rs == SHUTDOWN &amp;&amp;</span><br><span class="line">               firstTask == <span class="keyword">null</span> &amp;&amp;</span><br><span class="line">               ! workQueue.isEmpty()))</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">            <span class="comment">//获取工作线程数量</span></span><br><span class="line">            <span class="keyword">int</span> wc = workerCountOf(c);</span><br><span class="line">            <span class="comment">//是否大于线程池上限，是否大于核心线程数，或者最大线程数</span></span><br><span class="line">            <span class="keyword">if</span> (wc &gt;= CAPACITY ||</span><br><span class="line">                wc &gt;= (core ? corePoolSize : maximumPoolSize))</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            <span class="comment">//CAS 增加工作线程数</span></span><br><span class="line">            <span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</span><br><span class="line">                <span class="keyword">break</span> retry;</span><br><span class="line">            c = ctl.get();  <span class="comment">// Re-read ctl</span></span><br><span class="line">            <span class="comment">//如果线程池状态改变，回到开始重新来</span></span><br><span class="line">            <span class="keyword">if</span> (runStateOf(c) != rs)</span><br><span class="line">                <span class="keyword">continue</span> retry;</span><br><span class="line">            <span class="comment">// else CAS failed due to workerCount change; retry inner loop</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">boolean</span> workerStarted = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">boolean</span> workerAdded = <span class="keyword">false</span>;</span><br><span class="line">    Worker w = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">//上面的逻辑是考虑是否能够添加线程，如果可以就cas的增加工作线程数量</span></span><br><span class="line">    <span class="comment">//下面正式启动线程</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">//新建worker</span></span><br><span class="line">        w = <span class="keyword">new</span> Worker(firstTask);</span><br><span class="line">        <span class="comment">//获取当前线程</span></span><br><span class="line">        <span class="keyword">final</span> Thread t = w.thread;</span><br><span class="line">        <span class="keyword">if</span> (t != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//获取可重入锁</span></span><br><span class="line">            <span class="keyword">final</span> ReentrantLock mainLock = <span class="keyword">this</span>.mainLock;</span><br><span class="line">            <span class="comment">//锁住</span></span><br><span class="line">            mainLock.lock();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// Recheck while holding lock.</span></span><br><span class="line">                <span class="comment">// Back out on ThreadFactory failure or if</span></span><br><span class="line">                <span class="comment">// shut down before lock acquired.</span></span><br><span class="line">                <span class="keyword">int</span> rs = runStateOf(ctl.get());</span><br><span class="line">                <span class="comment">// rs &lt; SHUTDOWN ==&gt; 线程处于RUNNING状态</span></span><br><span class="line">                <span class="comment">// 或者线程处于SHUTDOWN状态，且firstTask == null（可能是workQueue中仍有未执行完成的任务，创建没有初始任务的worker线程执行）</span></span><br><span class="line">                <span class="keyword">if</span> (rs &lt; SHUTDOWN ||</span><br><span class="line">                    (rs == SHUTDOWN &amp;&amp; firstTask == <span class="keyword">null</span>)) &#123;</span><br><span class="line">                    <span class="comment">// 当前线程已经启动，抛出异常</span></span><br><span class="line">                    <span class="keyword">if</span> (t.isAlive()) <span class="comment">// precheck that t is startable</span></span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException();</span><br><span class="line">                    <span class="comment">//workers 是一个 HashSet 必须在 lock的情况下操作。</span></span><br><span class="line">                    workers.add(w);</span><br><span class="line">                    <span class="keyword">int</span> s = workers.size();</span><br><span class="line">                    <span class="comment">//设置 largeestPoolSize 标记workAdded</span></span><br><span class="line">                    <span class="keyword">if</span> (s &gt; largestPoolSize)</span><br><span class="line">                        largestPoolSize = s;</span><br><span class="line">                    workerAdded = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                mainLock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//如果添加成功，启动线程</span></span><br><span class="line">            <span class="keyword">if</span> (workerAdded) &#123;</span><br><span class="line">                t.start();</span><br><span class="line">                workerStarted = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">//启动线程失败，回滚。</span></span><br><span class="line">        <span class="keyword">if</span> (! workerStarted)</span><br><span class="line">            addWorkerFailed(w);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> workerStarted;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>先看看 <code>addWork()</code> 的两个参数，第一个是需要提交的线程 <strong>Runnable firstTask</strong>，第二个参数是 boolean 类型，表示是否为核心线程。</p>
-<p>execute() 中有三处调用了 <code>addWork()</code> 我们逐一分析。</p>
-<ul>
-<li>第一次，条件 <code>if (workerCountOf(c) &lt; corePoolSize)</code> 这个很好理解，工作线程数少于核心线程数，提交任务。所以 <code>addWorker(command, true)</code>。</li>
-<li>第二次，如果 <code>workerCountOf(recheck) == 0</code> 如果worker的数量为0，那就 <code>addWorker(null,false)</code>。为什么这里是 null ？之前已经把 command 提交到阻塞队列了 <code>workQueue.offer(command)</code> 。所以提交一个空线程，直接从阻塞队列里面取就可以了。</li>
-<li>第三次，如果线程池没有 RUNNING 或者 offer 阻塞队列失败，<code>addWorker(command,false)</code>，很好理解，对应的就是，阻塞队列满了，将任务提交到，非核心线程池。与最大线程池比较。</li>
-</ul>
-<p>至此，重新归纳<code>execute()</code>的逻辑应该是：</p>
-<ol>
-<li>如果当前运行的线程，少于corePoolSize，则创建一个新的线程来执行任务。</li>
-<li>如果运行的线程等于或多于 corePoolSize，将任务加入 BlockingQueue。</li>
-<li>如果加入 BlockingQueue 成功，需要二次检查线程池的状态如果线程池没有处于 Running，则从 BlockingQueue 移除任务，启动拒绝策略。</li>
-<li>如果线程池处于 Running状态，则检查工作线程（worker）是否为0。如果为0，则创建新的线程来处理任务。如果启动线程数大于maximumPoolSize，任务将被拒绝策略拒绝。</li>
-<li>如果加入 BlockingQueue 。失败,则创建新的线程来处理任务。</li>
-<li>如果启动线程数大于maximumPoolSize，任务将被拒绝策略拒绝。</li>
-</ol>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>如果 corePoolSize = 0 且 阻塞队列是无界的。线程池将如何工作？</p>
-</blockquote>
-<p>这个问题应该就不难回答了。</p>
-<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p><a href="https://re.jd.com/cps/item/11740734.html?cu=true&amp;utm_source=xilidou.com&amp;utm_medium=tuiguang&amp;utm_campaign=t_1000548061_&amp;utm_term=b152783143e94842bdc0e3422f300dce&amp;abt=3" target="_blank" rel="noopener">《Java并发编程的艺术》</a>是一本学习 java 并发编程的好书，在这里推荐给大家。</p>
-<p>同时，希望大家在阅读技术数据的时候要仔细思考，结合源码，发现，提出问题，解决问题。这样的学习才能高效且透彻。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/03/02/线程池-execute-的工作逻辑/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
         </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+    	 
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2018/02/25/hello-world/">Hello World</a>
+      <a class="archive-article-title" href="/2018/03/02/线程池-execute-的工作逻辑/">线程池 execute() 的工作逻辑</a>
     </h1>
   
 
-        
-        <a href="/2018/02/25/hello-world/" class="archive-article-date">
-  	<time datetime="2018-02-25T14:30:35.260Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-02-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+        <div class="article-info info-on-right">
+          
+          
 
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/02/25/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
+        </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
   
+    </div></section>
+  
+
+    
 
 
           </div>
@@ -365,9 +213,9 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
+		isHome: false,
 		isPost: false,
-		isArchive: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
